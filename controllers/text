@@ -1,0 +1,103 @@
+const fs = require('fs');
+const Tour = require('./../models/tourModel')
+const tours = JSON.parse(fs.readFileSync(`${__dirname}/../dev-data/data/tours.json`));
+
+//creating our own middleware function for the route which have id
+exports.checkId=(req, res, next, val) => {
+    console.log(`tour id is :${val}`);
+    if (req.params.id * 1 > tours.length) {
+        return res.status(404).json({
+            status: 'fail',
+            message: "Invalid id"
+        })
+    }
+    next();
+}
+
+
+// middleware for the post request
+exports.checkBody= (req,res,next)=>{
+
+    if (!req.body.name || !req.body.price ){
+        return res.status(400).json({
+            status: 'error',
+            message: "Missing name and price"
+        })
+        console.log("err")
+    }
+    next()
+
+}
+
+
+exports.getAllTours = (req, res) => {
+    res.status(200).json({
+        status: 'success',
+        result: tours.length,
+        data: {
+            tours,
+        },
+    });
+}
+
+exports.getTourById = (req, res) => {
+    // console.log(req.params);
+    // using req.params the value comes in string form
+    // so if we multiply the id with 1 it convert in no form
+    var id= req.params.id * 1 
+    const tour = tours.find(el =>
+        el._id === id
+    )
+        // console.log(id)
+    // if no tour found
+    // if(id > tours.length){
+
+    // if (!tour) {
+    //     return res.status(404).json({
+    //         status: 'fail',
+    //         message: "Invalid id"
+    //     })
+    // }
+
+    // if tour fond
+    res.status(200).json({
+        status: 'success',
+        // result: tours.length,
+        data: {
+            tour,
+        },
+    });
+}
+
+exports.createTour = (req, res) => {
+    const newId = tours[tours.length - 1]._id + 1;
+    const newTour = Object.assign({ _id: newId }, req.body);
+
+    tours.push(newTour);
+    fs.writeFile(
+        `${__dirname}/../dev-data/data/tours.json`,
+        JSON.stringify(tours),
+        (err) => {
+            res.status(201).json({
+                status: 'success',
+                data: {
+                    tour: newTour,
+                },
+            });
+        }
+    );
+}
+
+exports.updateTour = (req, res) => {
+    
+    res.status(200).json({
+        status: 'tour updated',
+    });
+}
+
+exports.deleteTour = (req, res) => {
+    
+    res.status(200).json({
+        status: 'tour deleted',
+    });
+}
